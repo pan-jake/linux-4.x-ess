@@ -393,7 +393,10 @@ int __init mx6q_clocks_init(void)
 	clk_register_clkdev(clk[gpt_ipg], "ipg", "imx-gpt.0");
 	clk_register_clkdev(clk[gpt_ipg_per], "per", "imx-gpt.0");
 	clk_register_clkdev(clk[twd], NULL, "smp_twd");
-	clk_register_clkdev(clk[usboh3], NULL, "usboh3");
+	clk_register_clkdev(clk[usboh3], NULL, "2184000.usb");
+	clk_register_clkdev(clk[usboh3], NULL, "2184200.usb");
+	clk_register_clkdev(clk[usboh3], NULL, "2184400.usb");
+	clk_register_clkdev(clk[usboh3], NULL, "2184600.usb");
 	clk_register_clkdev(clk[uart_serial], "per", "2020000.serial");
 	clk_register_clkdev(clk[uart_ipg], "ipg", "2020000.serial");
 	clk_register_clkdev(clk[uart_serial], "per", "21e8000.serial");
