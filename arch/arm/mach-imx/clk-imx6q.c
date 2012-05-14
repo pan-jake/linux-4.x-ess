@@ -159,7 +159,7 @@ enum mx6q_clks {
 static struct clk *clk[clk_max];
 
 static enum mx6q_clks const clks_init_on[] __initconst = {
-	mmdc_ch0_axi, rom,
+	mmdc_ch0_axi, rom, mmdc_ch1_axi, usboh3,
 };
 
 int __init mx6q_clocks_init(void)
