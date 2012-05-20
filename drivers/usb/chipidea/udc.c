@@ -1684,7 +1684,8 @@ static int udc_start(struct ci13xxx *ci)
 
 	ci->gadget.ep0 = &ci->ep0in->ep;
 
-	ci->transceiver = usb_get_transceiver();
+	if (ci->global_phy) {
+		ci->transceiver = usb_get_transceiver();
 
 	if (ci->platdata->flags & CI13XXX_REQUIRE_TRANSCEIVER) {
 		if (ci->transceiver == NULL) {
@@ -1728,7 +1729,8 @@ static int udc_start(struct ci13xxx *ci)
 remove_trans:
 	if (ci->transceiver) {
 		otg_set_peripheral(ci->transceiver->otg, &ci->gadget);
-		usb_put_transceiver(ci->transceiver);
+		if (ci->global_phy)
+			usb_put_transceiver(ci->transceiver);
 	}
 
 	dev_err(dev, "error = %i\n", retval);
@@ -1737,7 +1739,7 @@ remove_dbg:
 unreg_device:
 	device_unregister(&ci->gadget.dev);
 put_transceiver:
-	if (ci->transceiver)
+	if (ci->transceiver && ci->global_phy)
 		usb_put_transceiver(ci->transceiver);
 free_pools:
 	dma_pool_destroy(ci->td_pool);
@@ -1771,7 +1773,8 @@ static void udc_stop(struct ci13xxx *ci)
 
 	if (ci->transceiver) {
 		otg_set_peripheral(ci->transceiver->otg, NULL);
-		usb_put_transceiver(ci->transceiver);
+		if (ci->global_phy)
+			usb_put_transceiver(ci->transceiver);
 	}
 	dbg_remove_files(&ci->gadget.dev);
 	device_unregister(&ci->gadget.dev);
