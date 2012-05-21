@@ -19,6 +19,7 @@
 #include <linux/irqdomain.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
+#include <linux/of_gpio.h>
 #include <linux/of_irq.h>
 #include <linux/of_platform.h>
 #include <linux/pinctrl/machine.h>
@@ -113,6 +114,38 @@ static void __init imx6q_sabrelite_init(void)
 	imx6q_sabrelite_cko1_setup();
 }
 
+static void __init imx6q_config_on_boot(void)
+{
+	struct device_node *np;
+	struct property *pp;
+	int cnt, len, i;
+	int gpio;
+
+	np = of_find_node_by_path("/config-on-boot");
+	if (!np)
+		return;
+	cnt = of_gpio_named_count(np, "output-gpios");
+	pp = of_find_property(np, "output-gpio-values", &len);
+	if (!pp || cnt != len / sizeof(u32)) {
+		pr_err("Invalid config-on-boot gpios!\n");
+		of_node_put(np);
+		return;
+	}
+	for (i = 0; i < cnt; i++) {
+		gpio = of_get_named_gpio(np, "output-gpios", i);
+		if (gpio_is_valid(gpio))
+			gpio_request_one(gpio, GPIOF_OUT_INIT_HIGH,
+					"config-on-boot");
+	}
+
+	of_node_put(np);
+}
+
+static void __init imx6q_post_populate(void)
+{
+	imx6q_config_on_boot();
+}
+
 static void __init imx6q_init_machine(void)
 {
 	/*
@@ -125,6 +158,8 @@ static void __init imx6q_init_machine(void)
 		imx6q_sabrelite_init();
 
 	of_platform_populate(NULL, of_default_bus_match_table, NULL, NULL);
+
+	imx6q_post_populate();
 
 	imx6q_pm_init();
 }

@@ -1,0 +1,12 @@
+* Configure on Boot
+
+Node name: config-on-boot
+  It must be in root node. config-on-boot means to describe settings that needs
+  to be set one time on boot but aren't owned by any driver, or the owned driver
+  is too generic to handle such settings. For example, usb hub uses generic
+  driver in usb core code, a on-board usb may need deassert reset pin.
+
+Optional properties:
+- output-gpios: Output gpio array that needs to set.
+- output-gpio-values: This property is required if output-gpios is set.
+  The value is a array of 0 or 1. Total count eaquals the number of gpios.
