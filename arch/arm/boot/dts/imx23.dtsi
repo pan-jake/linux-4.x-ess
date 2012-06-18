@@ -287,7 +287,8 @@
 				status = "disabled";
 			};
 
-			usbphy@8007c000 {
+			usbphy0: usbphy@8007c000 {
+				compatible = "fsl,imx23-usbphy";
 				reg = <0x8007c000 0x2000>;
 				status = "disabled";
 			};
@@ -301,8 +302,11 @@
 		reg = <0x80080000 0x80000>;
 		ranges;
 
-		usbctrl@80080000 {
+		usb0: usb@80080000 {
+			compatible = "fsl,imx31-usb";
 			reg = <0x80080000 0x10000>;
+			interrupts = <11>;
+			fsl,usbphy = <&usbphy0>;
 			status = "disabled";
 		};
 	};
