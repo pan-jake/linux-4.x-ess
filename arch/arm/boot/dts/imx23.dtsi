@@ -134,6 +134,20 @@
 					fsl,pinmux-ids = <0x2010 0x2060>;
 					fsl,pull-up = <0>;
 				};
+
+				mmc0_4bit_pins_a: mmc0-4bit@0 {
+					reg = <0>;
+					fsl,pinmux-ids = <0x2000 0x2020 0x2030
+						0x2040 0x2050>;
+					fsl,drive-strength = <1>;
+					fsl,voltage = <1>;
+					fsl,pull-up = <1>;
+				};
+
+				mmc0_sck_cfg: mmc0_sck_cfg {
+					fsl,pinmux-ids = <0x2010>;
+					fsl,pull-up = <0>;
+				};
 			};
 
 			digctl@8001c000 {
