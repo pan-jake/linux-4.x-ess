@@ -196,6 +196,8 @@ int __init mx23_clocks_init(void)
 	clk_register_clkdevs(clks[ssp], ssp_lookups, ARRAY_SIZE(ssp_lookups));
 	clk_register_clkdevs(clks[gpmi], gpmi_lookups, ARRAY_SIZE(gpmi_lookups));
 	clk_register_clkdevs(clks[lcdif], lcdif_lookups, ARRAY_SIZE(lcdif_lookups));
+	clk_register_clkdev(clks[usb_pwr], NULL, "8007c000.usbphy");
+	clk_register_clkdev(clks[usb], NULL, "80080000.usb");
 
 	for (i = 0; i < ARRAY_SIZE(clks_init_on); i++)
 		clk_prepare_enable(clks[clks_init_on[i]]);
