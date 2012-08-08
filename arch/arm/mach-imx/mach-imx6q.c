@@ -44,8 +44,6 @@ void imx6q_restart(char mode, const char *cmd)
 	if (!wdog_base)
 		goto soft;
 
-	imx_src_prepare_restart();
-
 	/* enable wdog */
 	writew_relaxed(1 << 2, wdog_base);
 	/* write twice to ensure the request will not get ignored */
