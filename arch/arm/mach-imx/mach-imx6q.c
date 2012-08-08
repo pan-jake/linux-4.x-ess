@@ -37,14 +37,10 @@
 #include <mach/cpuidle.h>
 #include <mach/hardware.h>
 
+static void __iomem *wdog_base;
 
 void imx6q_restart(char mode, const char *cmd)
 {
-	struct device_node *np;
-	void __iomem *wdog_base;
-
-	np = of_find_compatible_node(NULL, NULL, "fsl,imx6q-wdt");
-	wdog_base = of_iomap(np, 0);
 	if (!wdog_base)
 		goto soft;
 
@@ -159,6 +155,11 @@ static void __init imx6q_usb_init(void)
 
 static void __init imx6q_init_machine(void)
 {
+	struct device_node *np;
+
+	np = of_find_compatible_node(NULL, NULL, "fsl,imx6q-wdt");
+	wdog_base = of_iomap(np, 0);
+
 	/*
 	 * This should be removed when all imx6q boards have pinctrl
 	 * states for devices defined in device tree.
