@@ -170,7 +170,6 @@
 				compatible = "fsl,imx51-wdt", "fsl,imx21-wdt";
 				reg = <0x73f98000 0x4000>;
 				interrupts = <58>;
-				status = "disabled";
 			};
 
 			wdog@73f9c000 { /* WDOG2 */
@@ -215,6 +214,7 @@
 				compatible = "fsl,imx51-sdma", "fsl,imx35-sdma";
 				reg = <0x83fb0000 0x4000>;
 				interrupts = <6>;
+				fsl,sdma-ram-script-name = "imx/sdma/sdma-imx51.bin";
 			};
 
 			cspi@83fc0000 {

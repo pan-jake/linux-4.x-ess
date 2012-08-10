@@ -169,10 +169,6 @@
 				};
 			};
 
-			wdog@73f98000 { /* WDOG1 */
-				status = "okay";
-			};
-
 			iomuxc@73fa8000 {
 				compatible = "fsl,imx51-iomuxc-babbage";
 				reg = <0x73fa8000 0x4000>;
@@ -189,10 +185,6 @@
 		};
 
 		aips@80000000 {	/* aips-2 */
-			sdma@83fb0000 {
-				fsl,sdma-ram-script-name = "imx/sdma/sdma-imx51.bin";
-			};
-
 			i2c@83fc4000 { /* I2C2 */
 				status = "okay";
 
