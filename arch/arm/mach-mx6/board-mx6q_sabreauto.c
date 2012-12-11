@@ -622,16 +622,10 @@ static struct pca953x_platform_data max7310_u43_platdata = {
 
 static void adv7180_pwdn(int pwdn)
 {
-	int status = -1;
-
-	status = gpio_request(SABREAUTO_VIDEOIN_PWR, "tvin-pwr");
-
 	if (pwdn)
-		gpio_direction_output(SABREAUTO_VIDEOIN_PWR, 0);
+		gpio_set_value_cansleep(SABREAUTO_VIDEOIN_PWR, 0);
 	else
-		gpio_direction_output(SABREAUTO_VIDEOIN_PWR, 1);
-
-	gpio_free(SABREAUTO_VIDEOIN_PWR);
+		gpio_set_value_cansleep(SABREAUTO_VIDEOIN_PWR, 1);
 }
 
 static void mx6q_csi0_io_init(void)
