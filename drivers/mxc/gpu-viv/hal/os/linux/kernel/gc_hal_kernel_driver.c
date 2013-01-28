@@ -24,6 +24,7 @@
 
 #include <linux/device.h>
 #include <linux/slab.h>
+#include <linux/notifier.h>
 #include "gc_hal_kernel_linux.h"
 #include "gc_hal_driver.h"
 
@@ -74,6 +75,11 @@ task_notify_func(struct notifier_block *self, unsigned long val, void *data)
 #endif
 /* Zone used for header/footer. */
 #define _GC_OBJ_ZONE    gcvZONE_DRIVER
+
+#if gcdENABLE_FSCALE_VAL_ADJUST
+extern int register_thermal_notifier(struct notifier_block *nb);
+extern int unregister_thermal_notifier(struct notifier_block *nb);
+#endif
 
 MODULE_DESCRIPTION("Vivante Graphics Driver");
 MODULE_LICENSE("GPL");
@@ -980,6 +986,34 @@ static void drv_exit(void)
 #   define DEVICE_NAME "galcore"
 #endif
 
+#if gcdENABLE_FSCALE_VAL_ADJUST
+static int thermal_hot_pm_notify(struct notifier_block *nb, unsigned long event,
+	void *dummy)
+{
+    static gctUINT orgFscale, minFscale, maxFscale;
+    static gctBOOL bAlreadyTooHot = gcvFALSE;
+    gckHARDWARE hardware = galDevice->kernels[gcvCORE_MAJOR]->hardware;
+
+    if (event && !bAlreadyTooHot) {
+        gckHARDWARE_GetFscaleValue(hardware,&orgFscale,&minFscale, &maxFscale);
+        gckHARDWARE_SetFscaleValue(hardware, minFscale);
+        bAlreadyTooHot = gcvTRUE;
+        gckOS_Print("System is too hot. GPU3D will work at %d/64 clock.\n", minFscale);
+    } else if (!event && bAlreadyTooHot) {
+        gckHARDWARE_SetFscaleValue(hardware, orgFscale);
+        gckOS_Print("Hot alarm is canceled. GPU3D clock will return to %d/64\n", orgFscale);
+        bAlreadyTooHot = gcvFALSE;
+    }
+    return NOTIFY_OK;
+}
+
+static struct notifier_block thermal_hot_pm_notifier = {
+    .notifier_call = thermal_hot_pm_notify,
+    };
+#endif
+
+
+
 static int __devinit gpu_probe(struct platform_device *pdev)
 {
     int ret = -ENODEV;
@@ -1049,10 +1083,16 @@ static int __devinit gpu_probe(struct platform_device *pdev)
     {
         platform_set_drvdata(pdev, galDevice);
 
+#if gcdENABLE_FSCALE_VAL_ADJUST
+        if(galDevice->kernels[gcvCORE_MAJOR])
+            register_thermal_notifier(&thermal_hot_pm_notifier);
+#endif
         gcmkFOOTER_NO();
         return ret;
     }
-
+#if gcdENABLE_FSCALE_VAL_ADJUST
+    unregister_thermal_notifier(&thermal_hot_pm_notifier);
+#endif
     gcmkFOOTER_ARG(KERN_INFO "Failed to register gpu driver: %d\n", ret);
     return ret;
 }
@@ -1060,6 +1100,10 @@ static int __devinit gpu_probe(struct platform_device *pdev)
 static int __devinit gpu_remove(struct platform_device *pdev)
 {
     gcmkHEADER();
+#if gcdENABLE_FSCALE_VAL_ADJUST
+    if(galDevice->kernels[gcvCORE_MAJOR])
+        unregister_thermal_notifier(&thermal_hot_pm_notifier);
+#endif
     drv_exit();
     gcmkFOOTER_NO();
     return 0;
