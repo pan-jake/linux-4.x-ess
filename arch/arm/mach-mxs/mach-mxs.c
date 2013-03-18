@@ -123,7 +123,7 @@ static struct fb_videomode cfa10049_video_modes[] = {
 		.lower_margin	= 2,
 		.hsync_len	= 15,
 		.vsync_len	= 15,
-		.sync		= FB_SYNC_DATA_ENABLE_HIGH_ACT
+		.sync		= MXSFB_SYNC_DATA_ENABLE_HIGH_ACT
 	},
 };
 
