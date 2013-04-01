@@ -22,6 +22,9 @@ struct fec_platform_data {
 	phy_interface_t phy;
 	unsigned char mac[ETH_ALEN];
         u32 phy_noscan_mask;
+#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+	unsigned int gpio_irq;
+#endif
 };
 
 #endif
