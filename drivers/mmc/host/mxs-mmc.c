@@ -689,7 +689,8 @@ static int mxs_mmc_probe(struct platform_device *pdev)
 		mmc->caps |= MMC_CAP_4_BIT_DATA;
 	else if (bus_width == 8)
 		mmc->caps |= MMC_CAP_4_BIT_DATA | MMC_CAP_8_BIT_DATA;
-	host->non_removable = of_property_read_bool(np, "non-removable");
+	host->non_removable = of_property_read_bool(np, "non-removable") |
+		of_property_read_bool(np, "broken-cd");
 	if (host->non_removable)
 		mmc->caps |= MMC_CAP_NONREMOVABLE;
 	host->wp_gpio = of_get_named_gpio_flags(np, "wp-gpios", 0, &flags);
