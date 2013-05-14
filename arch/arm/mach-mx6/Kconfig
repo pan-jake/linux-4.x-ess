@@ -310,6 +310,7 @@ config MACH_WANDBOARD
 	select IMX_HAVE_PLATFORM_IMX_VPU if MXC_VPU
 	select IMX_HAVE_PLATFORM_IMX_MIPI_DSI if VIDEO_MXC_IPU_OUTPUT
 	select IMX_HAVE_PLATFORM_IMX_PCIE if IMX_PCIE
+	select ZONE_DMA if ION=n
 	help
 	  Include support for the WandBoard SoM.
 
