@@ -107,6 +107,15 @@ static u8 g_edid[2][512];
 
 static struct fb_videomode ldb_modedb[] = {
 	{
+	/* 800x480 @ 60 Hz , pixel clk @ 32MHz */
+	 "LDB-WVGA", 60, 800, 480, 29850, 
+	 89, 164, 
+	 23, 10, 
+	 10, 10,
+	 FB_SYNC_CLK_LAT_FALL,
+	 FB_VMODE_NONINTERLACED,
+	 0,},
+	{
 	 "LDB-WXGA", 60, 1280, 800, 14065,
 	 40, 40,
 	 10, 3,
