@@ -311,6 +311,8 @@ config MACH_WANDBOARD
 	select IMX_HAVE_PLATFORM_IMX_MIPI_DSI if VIDEO_MXC_IPU_OUTPUT
 	select IMX_HAVE_PLATFORM_IMX_PCIE if IMX_PCIE
 	select ZONE_DMA if ION=n
+	select IMX_HAVE_PLATFORM_LDB if FB_MXC_LDB
+	select IMX_HAVE_PLATFORM_IMX_VDOA if MXC_IPU_V3
 	help
 	  Include support for the WandBoard SoM.
 
