@@ -112,7 +112,7 @@ static struct fb_videomode ldb_modedb[] = {
 	 89, 164, 
 	 23, 10, 
 	 10, 10,
-	 FB_SYNC_CLK_LAT_FALL,
+	 FB_SYNC_HOR_HIGH_ACT,
 	 FB_VMODE_NONINTERLACED,
 	 0,},
 	{
