@@ -24,6 +24,7 @@
 #include <linux/pinctrl/consumer.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/time.h>
+#include <asm/system_info.h>
 #include <mach/common.h>
 #include <mach/digctl.h>
 #include <mach/mxs.h>
@@ -513,9 +514,23 @@ static void mxs_print_silicon_rev(const char *cpu, int srev)
 				cpu, (srev >> 4) & 0xf, srev & 0xf);
 }
 
+static void mxs_pass_sysrev(void)
+{
+	int cputype = 0;
+
+	if (strcmp(mxs_get_cpu_type(), "MX23"))
+		cputype = 0x23000;
+
+	if (strcmp(mxs_get_cpu_type(), "MX28"))
+		cputype = 0x28000;
+
+	system_rev = (cputype | mxs_get_cpu_rev());
+}
+
 static void __init mxs_machine_init(void)
 {
 	mxs_print_silicon_rev(mxs_get_cpu_type(), mxs_get_cpu_rev());
+	mxs_pass_sysrev();
 
 	if (of_machine_is_compatible("fsl,imx28-evk"))
 		imx28_evk_init();
