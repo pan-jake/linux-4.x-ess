@@ -178,7 +178,6 @@ struct machine_desc * __init setup_machine_fdt(unsigned int dt_phys)
 	struct machine_desc *mdesc, *mdesc_best = NULL;
 	unsigned int score, mdesc_score = ~1;
 	unsigned long dt_root;
-	const char *model;
 
 	if (!dt_phys)
 		return NULL;
@@ -217,12 +216,14 @@ struct machine_desc * __init setup_machine_fdt(unsigned int dt_phys)
 		dump_machine_table(); /* does not return */
 	}
 
-	model = of_get_flat_dt_prop(dt_root, "model", NULL);
-	if (!model)
-		model = of_get_flat_dt_prop(dt_root, "compatible", NULL);
-	if (!model)
-		model = "<unknown>";
-	pr_info("Machine: %s, model: %s\n", mdesc_best->name, model);
+	mdesc_best->model = of_get_flat_dt_prop(dt_root, "model", NULL);
+	if (!mdesc_best->model)
+		mdesc_best->model = of_get_flat_dt_prop(dt_root, "compatible",
+							NULL);
+	if (!mdesc_best->model)
+		mdesc_best->model = "<unknown>";
+	pr_info("Machine: %s, model: %s\n", mdesc_best->name,
+		mdesc_best->model);
 
 	/* Retrieve various information from the /chosen node */
 	of_scan_flat_dt(early_init_dt_scan_chosen, boot_command_line);
