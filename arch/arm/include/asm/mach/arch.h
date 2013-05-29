@@ -23,6 +23,7 @@ struct smp_operations;
 struct machine_desc {
 	unsigned int		nr;		/* architecture number	*/
 	const char		*name;		/* architecture name	*/
+	const char		*model;		/* architecture model */
 	unsigned long		atag_offset;	/* tagged list (relative) */
 	const char *const 	*dt_compat;	/* array of device tree
 						 * 'compatible' strings	*/
