@@ -610,22 +610,30 @@ static int mxs_saif_dai_probe(struct snd_soc_dai *dai)
 	return 0;
 }
 
-static struct snd_soc_dai_driver mxs_saif_dai = {
-	.name = "mxs-saif",
-	.probe = mxs_saif_dai_probe,
-	.playback = {
-		.channels_min = 2,
-		.channels_max = 2,
-		.rates = MXS_SAIF_RATES,
-		.formats = MXS_SAIF_FORMATS,
-	},
-	.capture = {
-		.channels_min = 2,
-		.channels_max = 2,
-		.rates = MXS_SAIF_RATES,
-		.formats = MXS_SAIF_FORMATS,
-	},
-	.ops = &mxs_saif_dai_ops,
+static struct snd_soc_dai_driver mxs_saif_dai[2] = {
+	{
+		.name = "saif0",
+		.id = 0,
+		.probe = mxs_saif_dai_probe,
+		.playback = {
+			.channels_min = 2,
+			.channels_max = 2,
+			.rates = MXS_SAIF_RATES,
+			.formats = MXS_SAIF_FORMATS,
+		},
+		.ops = &mxs_saif_dai_ops,
+	}, {
+		.name = "saif1",
+		.id = 1,
+		.probe = mxs_saif_dai_probe,
+		.capture = {
+			.channels_min = 2,
+			.channels_max = 2,
+			.rates = MXS_SAIF_RATES,
+			.formats = MXS_SAIF_FORMATS,
+		},
+		.ops = &mxs_saif_dai_ops,
+	}, 	
 };
 
 static irqreturn_t mxs_saif_irq(int irq, void *dev_id)
@@ -772,7 +780,7 @@ static int mxs_saif_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, saif);
 
-	ret = snd_soc_register_dai(&pdev->dev, &mxs_saif_dai);
+	ret = snd_soc_register_dai(&pdev->dev, &mxs_saif_dai[saif->id]);
 	if (ret) {
 		dev_err(&pdev->dev, "register DAI failed\n");
 		return ret;
@@ -787,7 +795,7 @@ static int mxs_saif_probe(struct platform_device *pdev)
 	return 0;
 
 failed_pdev_alloc:
-	snd_soc_unregister_dai(&pdev->dev);
+	snd_soc_unregister_dais(&pdev->dev, ARRAY_SIZE(mxs_saif_dai));
 
 	return ret;
 }
@@ -795,7 +803,7 @@ failed_pdev_alloc:
 static int mxs_saif_remove(struct platform_device *pdev)
 {
 	mxs_pcm_platform_unregister(&pdev->dev);
-	snd_soc_unregister_dai(&pdev->dev);
+	snd_soc_unregister_dais(&pdev->dev, ARRAY_SIZE(mxs_saif_dai));
 
 	return 0;
 }
