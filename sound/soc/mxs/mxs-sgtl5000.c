@@ -94,6 +94,7 @@ static struct snd_soc_dai_link mxs_sgtl5000_dai[] = {
 		.cpu_dai_name	= "mxs-saif.0",
 		.platform_name	= "mxs-saif.0",
 		.ops		= &mxs_sgtl5000_hifi_ops,
+		.playback_only	= true,
 	}, {
 		.name		= "HiFi Rx",
 		.stream_name	= "HiFi Capture",
@@ -102,6 +103,7 @@ static struct snd_soc_dai_link mxs_sgtl5000_dai[] = {
 		.cpu_dai_name	= "mxs-saif.1",
 		.platform_name	= "mxs-saif.1",
 		.ops		= &mxs_sgtl5000_hifi_ops,
+		.capture_only	= true,
 	},
 };
 
