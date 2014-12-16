@@ -144,7 +144,7 @@ struct dcu_fb_data {
 	struct list_head modelist;
 	struct fb_videomode native_mode;
 	u32 bits_per_pixel;
-	bool clk_pol_negedge;
+	bool pixclockpol;
 };
 
 struct layer_display_offset {
@@ -461,8 +461,11 @@ static void update_controller(struct fb_info *info)
 		DCU_VSYN_PARA_FP(var->lower_margin),
 		dcufb->reg_base + DCU_VSYN_PARA);
 
-	/* Reference Manual is wrong, INV_PXCK => 1 means falling edge! */
-	if (dcufb->clk_pol_negedge)
+	/*
+	 * pixclockpol = 0 => display samples data on falling edge => 0
+	 * pixclockpol = 1 => display samples data on rising edge => 1 (default)
+	 */
+	if (dcufb->pixclockpol)
 		pol |= DCU_SYN_POL_INV_PXCK_FALL;
 
 	if (!(var->sync & FB_SYNC_HOR_HIGH_ACT))
@@ -816,7 +819,14 @@ static int fsl_dcu_init_modelist(struct dcu_fb_data *dcufb)
 
 		if (i == timings->native_mode) {
 			fb_videomode_from_videomode(&vm, &dcufb->native_mode);
-			dcufb->clk_pol_negedge = timings->timings[i]->flags &
+
+			/*
+			 * Kernel pixelclk settings are controller centric
+			 * whereas DCU is display centric:
+			 * PIXDATA_NEGEDGE (drive data on falling edge)
+			 * => pixclockpol (display samples data on rising edge)
+			 */
+			dcufb->pixclockpol = timings->timings[i]->flags &
 						 DISPLAY_FLAGS_PIXDATA_NEGEDGE;
 		}
 
