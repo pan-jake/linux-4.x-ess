@@ -54,6 +54,9 @@
 #include <linux/platform_data/serial-imx.h>
 #include <linux/platform_data/dma-imx.h>
 
+#include <linux/gpio.h>
+#include <linux/of_gpio.h>
+
 /* Register definitions */
 #define URXD0 0x0  /* Receiver Register */
 #define URTX0 0x40 /* Transmitter Register */
@@ -233,6 +236,7 @@ struct imx_port {
 	unsigned short		trcv_delay; /* transceiver delay */
 	struct clk		*clk_ipg;
 	struct clk		*clk_per;
+	int             	rs485_dere_gpio;
 	const struct imx_uart_data *devdata;
 
 	/* DMA fields */
@@ -453,12 +457,19 @@ static void imx_stop_tx(struct uart_port *port)
 	/* in rs485 mode disable transmitter if shifter is empty */
 	if (port->rs485.flags & SER_RS485_ENABLED &&
 	    readl(port->membase + USR2) & USR2_TXDC) {
-		temp = readl(port->membase + UCR2);
-		if (port->rs485.flags & SER_RS485_RTS_AFTER_SEND)
-			temp &= ~UCR2_CTS;
-		else
-			temp |= UCR2_CTS;
-		writel(temp, port->membase + UCR2);
+		if (sport->rs485_dere_gpio != -1) {
+			gpio_set_value(sport->rs485_dere_gpio, 0);
+			temp = readl(port->membase + UCR2);
+			temp |= UCR2_RXEN;
+			writel(temp, port->membase + UCR2);
+		} else {
+			temp = readl(port->membase + UCR2);
+			if (port->rs485.flags & SER_RS485_RTS_AFTER_SEND)
+				temp &= ~UCR2_CTS;
+			else
+				temp |= UCR2_CTS;
+			writel(temp, port->membase + UCR2);
+		}
 
 		temp = readl(port->membase + UCR4);
 		temp &= ~UCR4_TCEN;
@@ -625,12 +636,19 @@ static void imx_start_tx(struct uart_port *port)
 
 	if (port->rs485.flags & SER_RS485_ENABLED) {
 		/* enable transmitter and shifter empty irq */
-		temp = readl(port->membase + UCR2);
-		if (port->rs485.flags & SER_RS485_RTS_ON_SEND)
-			temp &= ~UCR2_CTS;
-		else
-			temp |= UCR2_CTS;
-		writel(temp, port->membase + UCR2);
+		if (sport->rs485_dere_gpio != -1) {
+			temp = readl(port->membase + UCR2);
+			temp &= ~UCR2_RXEN;
+			writel(temp, port->membase + UCR2);
+			gpio_set_value(sport->rs485_dere_gpio, 1);
+		} else {
+			temp = readl(port->membase + UCR2);
+			if (port->rs485.flags & SER_RS485_RTS_ON_SEND)
+				temp &= ~UCR2_CTS;
+			else
+				temp |= UCR2_CTS;
+			writel(temp, port->membase + UCR2);
+		}
 
 		temp = readl(port->membase + UCR4);
 		temp |= UCR4_TCEN;
@@ -1751,6 +1769,7 @@ static int imx_rs485_config(struct uart_port *port,
 			    struct serial_rs485 *rs485conf)
 {
 	struct imx_port *sport = (struct imx_port *)port;
+	unsigned long temp;
 
 	/* unimplemented */
 	rs485conf->delay_rts_before_send = 0;
@@ -1758,20 +1777,25 @@ static int imx_rs485_config(struct uart_port *port,
 	rs485conf->flags |= SER_RS485_RX_DURING_TX;
 
 	/* RTS is required to control the transmitter */
-	if (!sport->have_rtscts)
+	if (!sport->have_rtscts && sport->rs485_dere_gpio == -1)
 		rs485conf->flags &= ~SER_RS485_ENABLED;
 
 	if (rs485conf->flags & SER_RS485_ENABLED) {
-		unsigned long temp;
-
 		/* disable transmitter */
-		temp = readl(sport->port.membase + UCR2);
-		temp &= ~UCR2_CTSC;
-		if (rs485conf->flags & SER_RS485_RTS_AFTER_SEND)
-			temp &= ~UCR2_CTS;
-		else
-			temp |= UCR2_CTS;
-		writel(temp, sport->port.membase + UCR2);
+		if (sport->rs485_dere_gpio != -1) {
+			temp = readl(sport->port.membase + UCR2);
+			temp &= ~UCR2_CTSC;
+			writel(temp, sport->port.membase + UCR2);
+			gpio_set_value(sport->rs485_dere_gpio, 0);
+		} else {
+			temp = readl(sport->port.membase + UCR2);
+			temp &= ~UCR2_CTSC;
+			if (rs485conf->flags & SER_RS485_RTS_AFTER_SEND)
+				temp &= ~UCR2_CTS;
+			else
+				temp |= UCR2_CTS;
+			writel(temp, sport->port.membase + UCR2);
+		}
 	}
 
 	port->rs485 = *rs485conf;
@@ -2113,6 +2137,12 @@ static int serial_imx_probe_dt(struct imx_port *sport,
 	if (of_get_property(np, "fsl,dte-mode", NULL))
 		sport->dte_mode = 1;
 
+	sport->rs485_dere_gpio = of_get_named_gpio(np, "fsl,rs485-dere-gpio", 0);
+	if (gpio_is_valid(sport->rs485_dere_gpio))
+		sport->have_rtscts = 0;
+	else
+		sport->rs485_dere_gpio = -1;
+
 	sport->devdata = of_id->data;
 
 	return 0;
@@ -2154,11 +2184,17 @@ static int serial_imx_probe(struct platform_device *pdev)
 	if (!sport)
 		return -ENOMEM;
 
+	sport->rs485_dere_gpio = -1;
 	ret = serial_imx_probe_dt(sport, pdev);
 	if (ret > 0)
 		serial_imx_probe_pdata(sport, pdev);
 	else if (ret < 0)
 		return ret;
+
+	if (sport->rs485_dere_gpio != -1) {
+		devm_gpio_request_one(&pdev->dev, sport->rs485_dere_gpio,
+					GPIOF_OUT_INIT_LOW, "rs485-dere-gpio");
+	}
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	base = devm_ioremap_resource(&pdev->dev, res);
