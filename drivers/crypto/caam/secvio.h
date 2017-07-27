@@ -40,6 +40,9 @@ int snvs_secvio_install_handler(struct device *dev, enum secvio_cause cause,
 				u8 *cause_description, void *ext);
 int snvs_secvio_remove_handler(struct device *dev, enum  secvio_cause cause);
 
+int snvs_secvio_get_monotonic_counter(u64* snvs_lpsmc);
+int snvs_secvio_inc_monotonic_counter(void);
+
 /*
  * Private data definitions for the secvio "driver"
  */
