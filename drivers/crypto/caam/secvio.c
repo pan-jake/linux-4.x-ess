@@ -45,6 +45,8 @@ static const u8 *snvs_ssm_state_name[] = {
 	"secure",
 };
 
+static struct snvs_secvio_drv_private *svprivate=NULL;
+
 /* Top-level security violation interrupt */
 static irqreturn_t snvs_secvio_interrupt(int irq, void *snvsdev)
 {
@@ -172,6 +174,37 @@ int snvs_secvio_remove_handler(struct device *dev, enum secvio_cause cause)
 }
 EXPORT_SYMBOL(snvs_secvio_remove_handler);
 
+
+/*
+ * Read the secure monotonic counter. 
+ * - snvs_lpsmc		Returns 64 bit value of SNVS_LP
+ *			Secure Montonic Counter
+ */
+int snvs_secvio_get_monotonic_counter(u64* snvs_lpsmc)
+{
+	if (svprivate == NULL)  return -1;
+	clk_enable(svprivate->clk);
+	*snvs_lpsmc =  (u64)rd_reg32(&svprivate->svregs->lp.smc_lsb) |
+                      ((u64)rd_reg32(&svprivate->svregs->lp.smc_msb))<<32;
+	clk_disable(svprivate->clk);
+	return 0;
+}
+EXPORT_SYMBOL(snvs_secvio_get_monotonic_counter);
+
+/*
+ * Increment the secure monotonic counter. 
+ */
+int snvs_secvio_inc_monotonic_counter(void)
+{
+	if (svprivate == NULL)  return -1;
+	clk_enable(svprivate->clk);
+	wr_reg32(&svprivate->svregs->lp.smc_lsb,1);
+	clk_disable(svprivate->clk);
+	return 0;
+}
+EXPORT_SYMBOL(snvs_secvio_inc_monotonic_counter);
+
+
 static int snvs_secvio_remove(struct platform_device *pdev)
 {
 	struct device *svdev;
@@ -180,6 +213,8 @@ static int snvs_secvio_remove(struct platform_device *pdev)
 
 	svdev = &pdev->dev;
 	svpriv = dev_get_drvdata(svdev);
+
+	svprivate = NULL;
 
 	clk_enable(svpriv->clk);
 	/* Set all sources to nonfatal */
@@ -277,8 +312,14 @@ static int snvs_secvio_probe(struct platform_device *pdev)
 	dev_info(svdev, "violation handlers armed - %s state\n",
 		 snvs_ssm_state_name[hpstate]);
 
-	clk_disable(svpriv->clk);
+	/* enable smc */
+	{
+		u32 reg = rd_reg32(&svpriv->svregs->lp.ctl);
+		wr_reg32(&svpriv->svregs->lp.ctl, reg | 0x00000004); // enable MC_ENV
+	}
 
+	clk_disable(svpriv->clk);
+	svprivate = svpriv;
 	return 0;
 }
 

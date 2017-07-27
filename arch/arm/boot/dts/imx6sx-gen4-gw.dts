@@ -23,6 +23,11 @@
 		reg = <0x80000000 0x40000000>;
 	};
 
+	caam_keyblob: caam-keyblob {
+		compatible = "fsl,sec-v4.0-keyblob";
+		status = "okay";
+	};
+
 	regulators {
 		compatible = "simple-bus";
 		#address-cells = <1>;
