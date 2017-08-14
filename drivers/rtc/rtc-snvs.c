@@ -261,12 +261,14 @@ static irqreturn_t snvs_rtc_irq_handler(int irq, void *dev_id)
 
 static void snvs_poweroff(void)
 {
-	u32 value;
+	return;
 
-	clk_enable(clk_snvs);
-	value = readl(snvs_base + SNVS_LPCR);
+	//u32 value;
+
+	//clk_enable(clk_snvs);
+	//value = readl(snvs_base + SNVS_LPCR);
 	/* set TOP and DP_EN bit */
-	writel(value | 0x60, snvs_base + SNVS_LPCR);
+	//writel(value | 0x60, snvs_base + SNVS_LPCR);
 	/*
 	 * Do not turn off snvs clock otherwise PMIC_ON_REQ can't be pulled
 	 * high by press ONOFF. This is design limitation.
